@@ -107,11 +107,20 @@ const QueueDB = {
     } catch (e) {}
 
     try {
-      fetch('https://ntfy.sh/' + encodeURIComponent(topic), {
+      // JSON publish: العنوان العربي لا يصح وضعه في هيدر HTTP (Latin-1 فقط) فيفشل fetch بصمت
+      fetch('https://ntfy.sh/', {
         method: 'POST',
-        headers: { 'Title': title, 'Priority': 'high', 'Tags': 'scissors,bell' },
-        body: body
-      }).catch(function () {});
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topic,
+          title: title,
+          message: body,
+          priority: 4,
+          tags: ['scissors', 'bell']
+        })
+      }).then(function (r) {
+        if (!r.ok) console.warn('ntfy failed', r.status);
+      }).catch(function (e) { console.warn('ntfy error', e); });
     } catch (e) {}
 
     try {
