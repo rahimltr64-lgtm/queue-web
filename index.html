@@ -315,11 +315,24 @@
     .btn { transition: transform 100ms var(--ease-out), opacity 150ms; }
     @media (hover: hover) { .btn-primary:not(:disabled):hover { transform: translateY(-1px); } }
 
+
+    /* ===== قائمة من قبلك (الأسماء فقط) ===== */
+    [hidden] { display: none !important; }
+    .ahead-list { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px 8px; margin-bottom: 8px; }
+    .ahead-list h2 { font-size: 1rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .ahead-list ul { list-style: none; max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; }
+    .ahead-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 1.05rem; font-weight: 500; overflow-wrap: anywhere; }
+    .ahead-list li:last-child { border-bottom: 0; }
+    .ahead-list li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .ahead-list li.in { animation: enter 200ms var(--ease-out) both; --dy: 8px; }
+    .ahead-list li.out { opacity: 0; transition: opacity 150ms var(--ease-in); }
+    .ahead-list p { padding: 8px 0 14px; color: var(--accent); font-weight: 700; }
+
     /* Reduced motion: no travel, no loops; opacity fades only */
     @media (prefers-reduced-motion: reduce) {
       :root { --dy: 0px; --tdy: 0px; --snip: 0deg; }
       header .logo, header h1, header .subtitle, #mainView .queue-card, #joinBtn, .status-bar,
-      .ticket.show, .modal, .error-msg.show { animation-duration: 120ms; animation-delay: 0ms; }
+      .ahead-list li.in, .ticket.show, .modal, .error-msg.show { animation-duration: 120ms; animation-delay: 0ms; }
       .blade, #joinBtn::after, .ticket::after, .ticket.show::after, body.ready #joinBtn::after { animation: none; }
       .pole::before { animation: none; transform: translateX(0); }
       .dot { animation: none; }
@@ -367,6 +380,12 @@
       <div class="ticket-note">احتفظ بهذا الرقم وانتظر دورك</div>
       <div id="ticketWait" style="margin-top:10px;color:rgba(255,255,255,0.85);font-size:0.95rem;"></div>
     </div>
+
+    <section class="ahead-list" id="aheadList" aria-labelledby="aheadTitle" hidden>
+      <h2 id="aheadTitle">قبلك في الطابور</h2>
+      <ul id="aheadNames"></ul>
+      <p id="aheadEmpty" hidden>لا أحد قبلك، دورك الآن</p>
+    </section>
 
     <button class="btn btn-secondary" id="leaveBtn" style="display:none" onclick="leaveQueue()">
       مغادرة الطابور
