@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F766E" />
+  <title>طابور الحلاق — سجّل دورك</title>
+  <meta name="description" content="سجّل في طابور الحلاق من هاتفك وتابع دورك مباشرة." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --accent: #14b8a6;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-top: 12px;
+    }
+    .logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--primary), #042f2e);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+      box-shadow: 0 8px 24px rgba(13, 148, 136, 0.35);
+    }
+    h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; }
+
+    .queue-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .queue-label { color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
+    .queue-number {
+      font-size: 4.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin: 8px 0;
+    }
+    .queue-hint { color: var(--muted); font-size: 0.9rem; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px 24px;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: 24px 24px 20px 20px;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 24px 32px;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal h2 { font-size: 1.25rem; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .form-group input::placeholder { color: #64748b; }
+    .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .form-actions .btn { flex: 1; }
+
+    .ticket {
+      background: linear-gradient(145deg, #0f766e, #042f2e);
+      border-radius: 24px;
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 40px rgba(13, 148, 136, 0.35);
+      display: none;
+    }
+    .ticket.show { display: block; }
+    .ticket-label { color: rgba(255,255,255,0.75); font-size: 1rem; margin-bottom: 8px; }
+    .ticket-number {
+      font-size: 5rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+      margin: 12px 0;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .ticket-name { color: rgba(255,255,255,0.9); font-size: 1.15rem; font-weight: 600; margin-top: 8px; }
+    .ticket-phone { color: rgba(255,255,255,0.65); font-size: 0.95rem; margin-top: 4px; }
+    .ticket-note {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: auto;
+      padding-top: 24px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    .dot.offline { background: var(--danger); animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      display: none;
+      text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    .shop-code-banner {
+      display: none;
+      background: rgba(13, 148, 136, 0.12);
+      border: 1px solid rgba(13, 148, 136, 0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .shop-code-banner strong { color: var(--accent); }
+
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 200;
+    }
+    .loading-overlay.hidden { display: none; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="color:#94a3b8;font-size:0.95rem;">جاري الاتصال...</div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo">✂</div>
+      <h1>طابور الحلاق</h1>
+      <p class="subtitle">سجّل نفسك وانتظر دورك</p>
+    </header>
+
+    <div class="shop-code-banner" id="shopBanner">
+      رمز المحل: <strong id="shopCodeDisplay">—</strong>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div id="mainView">
+      <div class="queue-card">
+        <div class="queue-label">عدد الأشخاص قبلك</div>
+        <div class="queue-number" id="aheadCount">—</div>
+        <div class="queue-hint">يتم التحديث تلقائياً</div>
+        <div id="waitEstimate" style="margin-top:12px;font-size:0.95rem;color:#14b8a6;font-weight:600;">—</div>
+      </div>
+
+      <button class="btn btn-primary" id="joinBtn" onclick="openJoinModal()">
+        أضف نفسك للطابور
+      </button>
+    </div>
+
+    <div class="ticket" id="ticketView">
+      <div class="ticket-label">رقمك في الطابور</div>
+      <div class="ticket-number" id="myNumber">—</div>
+      <div class="ticket-name" id="myName"></div>
+      <div class="ticket-phone" id="myPhone"></div>
+      <div class="ticket-note">احتفظ بهذا الرقم وانتظر دورك</div>
+      <div id="ticketWait" style="margin-top:10px;color:rgba(255,255,255,0.85);font-size:0.95rem;"></div>
+    </div>
+
+    <button class="btn btn-secondary" id="leaveBtn" style="display:none" onclick="leaveQueue()">
+      مغادرة الطابور
+    </button>
+
+    <div class="status-bar">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">متصل بالطابور</span>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="joinModal">
+    <div class="modal">
+      <h2>تسجيل في الطابور</h2>
+      <div class="form-group">
+        <label>الاسم</label>
+        <input type="text" id="firstName" placeholder="مثال: أحمد" autocomplete="given-name" />
+      </div>
+      <div class="form-group">
+        <label>اللقب</label>
+        <input type="text" id="lastName" placeholder="مثال: بن علي" autocomplete="family-name" />
+      </div>
+      <div class="form-group">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="phone" placeholder="05XX XXX XXX" inputmode="tel" autocomplete="tel" />
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="closeJoinModal()">إلغاء</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitJoin()">تأكيد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/customer.js"></script>
+</body>
+</html>

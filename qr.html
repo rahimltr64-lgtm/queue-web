@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ملصق رمز QR — طابور الحلاق</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#0b2a27; --teal:#0f766e; --paper:#f7fbfa; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Tajawal',sans-serif; background:#e2e8f0; color:var(--ink); min-height:100vh; padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .tools { width:100%; max-width:520px; display:grid; gap:10px; }
+  .tools label { font-size:.9rem; font-weight:700; }
+  .tools input { width:100%; padding:12px 14px; border:1px solid #94a3b8; border-radius:10px; font:inherit; direction:ltr; text-align:left; }
+  .row { display:flex; gap:10px; }
+  button { flex:1; padding:13px; border:0; border-radius:10px; font:inherit; font-weight:800; cursor:pointer; background:var(--teal); color:#fff; }
+  button.alt { background:#fff; color:var(--ink); border:1px solid #94a3b8; }
+  button:focus-visible, input:focus-visible { outline:3px solid #14b8a6; outline-offset:2px; }
+  .poster { width:100%; max-width:520px; background:var(--paper); border-radius:20px; padding:36px 28px 30px; text-align:center; border:6px solid var(--teal); }
+  .poster h1 { font-size:2.1rem; font-weight:800; line-height:1.3; }
+  .poster p { margin-top:8px; font-size:1.1rem; color:#31524e; }
+  .qrbox { margin:26px auto 22px; width:max-content; padding:16px; background:#fff; border-radius:14px; border:2px solid var(--ink); }
+  #qr img, #qr canvas { display:block; width:260px !important; height:260px !important; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; font-size:.95rem; font-weight:700; }
+  .steps div { background:#e6f4f1; border-radius:10px; padding:10px 6px; }
+  .url { margin-top:16px; font-size:.85rem; color:#31524e; direction:ltr; word-break:break-all; }
+  #err { color:#b91c1c; font-weight:700; display:none; }
+  @media print { body { background:#fff; padding:0; } .tools { display:none; } .poster { max-width:none; border-width:10px; border-radius:0; min-height:100vh; display:flex; flex-direction:column; justify-content:center; } #qr img, #qr canvas { width:420px !important; height:420px !important; } .poster h1 { font-size:3rem; } }
+</style>
+</head>
+<body>
+<div class="tools">
+  <label for="url">رابط صفحة التسجيل</label>
+  <input id="url" type="url" inputmode="url" />
+  <div class="row">
+    <button id="print">طباعة الملصق</button>
+    <button class="alt" id="save">حفظ الرمز كصورة</button>
+  </div>
+  <div id="err">تعذّر تحميل مكتبة الرمز. تحقق من الإنترنت ثم أعد فتح الصفحة.</div>
+</div>
+
+<section class="poster" aria-label="ملصق التسجيل في الطابور">
+  <h1>سجّل في الطابور من هاتفك</h1>
+  <p>لا تحتاج إلى تحميل أي تطبيق</p>
+  <div class="qrbox"><div id="qr" role="img" aria-label="رمز QR لصفحة التسجيل"></div></div>
+  <div class="steps"><div>امسح الرمز</div><div>اكتب اسمك ورقمك</div><div>تابع دورك مباشرة</div></div>
+  <div class="url" id="shown"></div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  const input = document.getElementById('url');
+  const shown = document.getElementById('shown');
+  const qrEl = document.getElementById('qr');
+  // الافتراضي: صفحة التسجيل (index.html) في نفس المجلد الذي توجد فيه هذه الصفحة
+  const def = new URL('index.html', location.href).href.replace(/index\.html$/, '');
+  input.value = new URLSearchParams(location.search).get('u') || def;
+
+  function draw() {
+    qrEl.innerHTML = '';
+    shown.textContent = input.value;
+    if (typeof QRCode === 'undefined') { document.getElementById('err').style.display = 'block'; return; }
+    new QRCode(qrEl, { text: input.value, width: 520, height: 520, correctLevel: QRCode.CorrectLevel.H, colorDark: '#0b2a27', colorLight: '#ffffff' });
+  }
+  input.addEventListener('input', draw);
+  document.getElementById('print').onclick = () => window.print();
+  document.getElementById('save').onclick = () => {
+    const c = qrEl.querySelector('canvas'); const i = qrEl.querySelector('img');
+    const href = c ? c.toDataURL('image/png') : (i && i.src);
+    if (!href) return;
+    const a = document.createElement('a'); a.href = href; a.download = 'barber-queue-qr.png'; a.click();
+  };
+  draw();
+</script>
+</body>
+</html>
