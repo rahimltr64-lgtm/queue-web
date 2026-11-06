@@ -90,7 +90,6 @@
     }
     .btn:active { transform: scale(0.98); }
     .btn:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
     .btn-primary {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
@@ -251,17 +250,92 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ================= Motion ================= */
+    :root {
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+      --ease-snip: cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    @keyframes enter { from { opacity: 0; transform: translateY(var(--dy, 14px)); } to { opacity: 1; transform: none; } }
+    @keyframes ticketIn { from { opacity: 0; transform: translateY(var(--tdy, -28px)); } to { opacity: 1; transform: none; } }
+    @keyframes sheen { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+    @keyframes snip { 0%,40%,80%,100% { transform: rotate(0); } 20%,60% { transform: rotate(var(--snip, -16deg)); } }
+    @keyframes sheetIn { from { opacity: 0; transform: translateY(var(--tdy, 32px)); } to { opacity: 1; transform: none; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pole { to { transform: translateX(56.57px); } }
+
+    /* 1) Opening sequence: runs once, after the connection overlay lifts */
+    header .logo, header h1, header .subtitle,
+    #mainView .queue-card, #joinBtn, .status-bar {
+      animation: enter 300ms var(--ease-out) both;
+      animation-delay: var(--d, 0ms);
+    }
+    header h1 { --d: 40ms; } header .subtitle { --d: 80ms; }
+    #mainView .queue-card { --d: 140ms; } #joinBtn { --d: 200ms; } .status-bar { --d: 260ms; }
+    body:not(.ready) header .logo, body:not(.ready) header h1, body:not(.ready) header .subtitle,
+    body:not(.ready) #mainView .queue-card, body:not(.ready) #joinBtn, body:not(.ready) .status-bar,
+    body:not(.ready) .blade { animation-play-state: paused; }
+
+    /* 2) Scissors snip twice after the logo lands */
+    .blade { display: inline-block; transform-origin: 50% 60%; animation: snip 600ms 520ms var(--ease-snip); }
+
+    /* 3) One light sweep across the join button */
+    #joinBtn { position: relative; overflow: hidden; }
+    #joinBtn::after, .ticket::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.22) 50%, transparent 65%);
+      transform: translateX(-120%);
+    }
+    body.ready #joinBtn::after { animation: sheen 700ms 900ms var(--ease-out) both; }
+
+    /* 4) Ticket prints in, then one sheen */
+    .ticket { position: relative; overflow: hidden; }
+    .ticket.show { animation: ticketIn 450ms var(--ease-out) both; }
+    .ticket.show::after { animation: sheen 700ms 350ms var(--ease-out) both; }
+
+    /* 5) Sheet and backdrop */
+    .modal-overlay.open { animation: fadeIn 150ms ease-out both; }
+    .modal { animation: sheetIn 200ms var(--ease-out) both; }
+    .modal-overlay.closing { animation: fadeIn 150ms var(--ease-in) reverse both; }
+    .modal-overlay.closing .modal { animation: sheetIn 150ms var(--ease-in) reverse both; --tdy: 24px; }
+    .error-msg.show { --dy: -8px; animation: enter 200ms var(--ease-out) both; }
+
+    /* 6) Loader: a barber pole (functional loop) + soft hand-off */
+    .pole { position: relative; width: 140px; height: 14px; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); background: #0f172a; }
+    .pole::before {
+      content: ''; position: absolute; inset: 0 -57px 0 -57px;
+      background: repeating-linear-gradient(-45deg, var(--primary) 0 10px, #f1f5f9 10px 20px, #ef4444 20px 30px, #f1f5f9 30px 40px);
+      animation: pole 700ms linear infinite;
+    }
+    .loading-overlay { transition: opacity 200ms ease-out, visibility 0s; }
+    .loading-overlay.hidden { display: flex; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease-out, visibility 0s 200ms; }
+
+    /* 7) Press feedback */
+    .btn { transition: transform 100ms var(--ease-out), opacity 150ms; }
+    @media (hover: hover) { .btn-primary:not(:disabled):hover { transform: translateY(-1px); } }
+
+    /* Reduced motion: no travel, no loops; opacity fades only */
+    @media (prefers-reduced-motion: reduce) {
+      :root { --dy: 0px; --tdy: 0px; --snip: 0deg; }
+      header .logo, header h1, header .subtitle, #mainView .queue-card, #joinBtn, .status-bar,
+      .ticket.show, .modal, .error-msg.show { animation-duration: 120ms; animation-delay: 0ms; }
+      .blade, #joinBtn::after, .ticket::after, .ticket.show::after, body.ready #joinBtn::after { animation: none; }
+      .pole::before { animation: none; transform: translateX(0); }
+      .dot { animation: none; }
+      .btn-primary:not(:disabled):hover { transform: none; }
+    }
   </style>
 </head>
 <body>
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
+    <div class="pole" role="progressbar" aria-label="جاري الاتصال"></div>
     <div style="color:#94a3b8;font-size:0.95rem;">جاري الاتصال...</div>
   </div>
 
   <div class="container">
     <header>
-      <div class="logo">✂</div>
+      <div class="logo"><span class="blade" aria-hidden="true">✂</span></div>
       <h1>طابور الحلاق</h1>
       <p class="subtitle">سجّل نفسك وانتظر دورك</p>
     </header>
@@ -332,5 +406,6 @@
   <script src="js/config.js"></script>
   <script src="js/db.js"></script>
   <script src="js/customer.js"></script>
+  <script src="js/motion.js"></script>
 </body>
 </html>
