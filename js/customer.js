@@ -174,6 +174,8 @@ async function leaveQueue() {
 }
 
 function refresh() {
+  // لا نحكم بغياب التذكرة قبل وصول أول بيانات من Firebase (وإلا تُمحى تذكرة المستخدم عند كل تحديث للصفحة)
+  if (!QueueDB._ready) return;
   const ticket = getMyTicket();
   if (ticket) {
     const still = QueueDB.findById(ticket.id);
@@ -198,10 +200,23 @@ document.getElementById('joinModal').addEventListener('click', (e) => {
 
 QueueDB.init()
   .then(() => {
-    document.getElementById('loadingOverlay').classList.add('hidden');
+    const overlay = document.getElementById('loadingOverlay');
+    let shown = false;
     document.getElementById('statusText').textContent = 'متصل بالطابور';
-    QueueDB.onUpdate(refresh);
-    refresh();
+    QueueDB.onUpdate(() => {
+      refresh();
+      if (!shown) { shown = true; overlay.classList.add('hidden'); }
+    });
+    // لو تأخّر الاتصال: نُظهر الصفحة ونعرض التذكرة المحفوظة دون حذفها
+    setTimeout(() => {
+      if (shown) return;
+      shown = true;
+      overlay.classList.add('hidden');
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'جاري الاتصال بالطابور...';
+      const t = getMyTicket();
+      if (t) showTicket(t);
+    }, 8000);
   })
   .catch((err) => {
     console.error(err);
