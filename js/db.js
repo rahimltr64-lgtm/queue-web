@@ -43,6 +43,12 @@ const QueueDB = {
   getAll() { return this._cache.slice(); },
   count() { return this._cache.length; },
   aheadOf(myNumber) { return this._cache.filter(c => c.number < myNumber).length; },
+  /** الأسماء الأولى فقط لمن قبل هذا الرقم، مرتّبة حسب الدور */
+  namesAhead(myNumber) {
+    return this._cache.filter(c => c.number < myNumber)
+      .map(c => ({ id: c.id, name: String(c.firstName || '').trim() || 'زبون' }));
+  },
+
   findById(id) { return this._cache.find(c => c.id === id) || null; },
 
   findByPhone(phone) {

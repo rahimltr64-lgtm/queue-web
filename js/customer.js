@@ -26,6 +26,7 @@ function updateAheadCount() {
     ahead = QueueDB.count();
     document.getElementById('aheadCount').textContent = ahead;
   }
+  renderAheadList(ticket);
   const waitEl = document.getElementById('waitEstimate');
   if (waitEl) {
     waitEl.textContent = QueueDB.formatWait(QueueDB.waitMinutes(ahead));
@@ -34,6 +35,45 @@ function updateAheadCount() {
   if (ticketWait && ticket) {
     ticketWait.textContent = 'الانتظار المتوقع: ' + QueueDB.formatWait(QueueDB.waitMinutes(QueueDB.aheadOf(ticket.number)));
   }
+}
+
+const aheadLis = new Map();
+let aheadFirstRender = true;
+
+function renderAheadList(ticket) {
+  const box = document.getElementById('aheadList');
+  if (!box) return;
+  if (!ticket) { box.hidden = true; aheadFirstRender = true; aheadLis.clear(); document.getElementById('aheadNames').textContent = ''; return; }
+  box.hidden = false;
+  const names = QueueDB.namesAhead(ticket.number);
+  const ul = document.getElementById('aheadNames');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.getElementById('aheadTitle').textContent = names.length ? 'قبلك في الطابور (' + names.length + ')' : 'قبلك في الطابور';
+  document.getElementById('aheadEmpty').hidden = names.length > 0;
+
+  const keep = new Set(names.map(n => n.id));
+  aheadLis.forEach((li, id) => {
+    if (keep.has(id)) return;
+    aheadLis.delete(id);
+    if (reduce) { li.remove(); return; }
+    li.classList.add('out');
+    setTimeout(() => li.remove(), 150);
+  });
+
+  names.forEach((n, i) => {
+    let li = aheadLis.get(n.id);
+    if (!li) {
+      li = document.createElement('li');
+      li.textContent = n.name;
+      if (aheadFirstRender) li.style.animationDelay = Math.min(i, 6) * 30 + 'ms';
+      li.classList.add('in');
+      aheadLis.set(n.id, li);
+    } else if (li.textContent !== n.name) {
+      li.textContent = n.name;
+    }
+    if (ul.children[i] !== li) ul.insertBefore(li, ul.children[i] || null);
+  });
+  aheadFirstRender = false;
 }
 
 function getMyTicket() {
