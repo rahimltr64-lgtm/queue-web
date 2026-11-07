@@ -43,13 +43,16 @@ let aheadFirstRender = true;
 function renderAheadList(ticket) {
   const box = document.getElementById('aheadList');
   if (!box) return;
-  if (!ticket) { box.hidden = true; aheadFirstRender = true; aheadLis.clear(); document.getElementById('aheadNames').textContent = ''; return; }
   box.hidden = false;
-  const names = QueueDB.namesAhead(ticket.number);
+  // مسجّل: من قبله فقط. غير مسجّل: كل قائمة الانتظار
+  const names = QueueDB.namesAhead(ticket ? ticket.number : Infinity);
   const ul = document.getElementById('aheadNames');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById('aheadTitle').textContent = names.length ? 'قبلك في الطابور (' + names.length + ')' : 'قبلك في الطابور';
-  document.getElementById('aheadEmpty').hidden = names.length > 0;
+  const label = ticket ? 'قبلك في الطابور' : 'قائمة الانتظار';
+  document.getElementById('aheadTitle').textContent = names.length ? label + ' (' + names.length + ')' : label;
+  const empty = document.getElementById('aheadEmpty');
+  empty.textContent = ticket ? 'لا أحد قبلك، دورك الآن' : 'لا أحد في الطابور حالياً، كن الأول';
+  empty.hidden = names.length > 0;
 
   const keep = new Set(names.map(n => n.id));
   aheadLis.forEach((li, id) => {
