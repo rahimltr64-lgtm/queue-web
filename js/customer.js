@@ -26,7 +26,6 @@ function updateAheadCount() {
     ahead = QueueDB.count();
     document.getElementById('aheadCount').textContent = ahead;
   }
-  renderAheadList(ticket);
   const waitEl = document.getElementById('waitEstimate');
   if (waitEl) {
     waitEl.textContent = QueueDB.formatWait(QueueDB.waitMinutes(ahead));
@@ -35,48 +34,6 @@ function updateAheadCount() {
   if (ticketWait && ticket) {
     ticketWait.textContent = 'الانتظار المتوقع: ' + QueueDB.formatWait(QueueDB.waitMinutes(QueueDB.aheadOf(ticket.number)));
   }
-}
-
-const aheadLis = new Map();
-let aheadFirstRender = true;
-
-function renderAheadList(ticket) {
-  const box = document.getElementById('aheadList');
-  if (!box) return;
-  box.hidden = false;
-  // مسجّل: من قبله فقط. غير مسجّل: كل قائمة الانتظار
-  const names = QueueDB.namesAhead(ticket ? ticket.number : Infinity);
-  const ul = document.getElementById('aheadNames');
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const label = ticket ? 'قبلك في الطابور' : 'قائمة الانتظار';
-  document.getElementById('aheadTitle').textContent = names.length ? label + ' (' + names.length + ')' : label;
-  const empty = document.getElementById('aheadEmpty');
-  empty.textContent = ticket ? 'لا أحد قبلك، دورك الآن' : 'لا أحد في الطابور حالياً، كن الأول';
-  empty.hidden = names.length > 0;
-
-  const keep = new Set(names.map(n => n.id));
-  aheadLis.forEach((li, id) => {
-    if (keep.has(id)) return;
-    aheadLis.delete(id);
-    if (reduce) { li.remove(); return; }
-    li.classList.add('out');
-    setTimeout(() => li.remove(), 150);
-  });
-
-  names.forEach((n, i) => {
-    let li = aheadLis.get(n.id);
-    if (!li) {
-      li = document.createElement('li');
-      li.textContent = n.name;
-      if (aheadFirstRender) li.style.animationDelay = Math.min(i, 6) * 30 + 'ms';
-      li.classList.add('in');
-      aheadLis.set(n.id, li);
-    } else if (li.textContent !== n.name) {
-      li.textContent = n.name;
-    }
-    if (ul.children[i] !== li) ul.insertBefore(li, ul.children[i] || null);
-  });
-  aheadFirstRender = false;
 }
 
 function getMyTicket() {
