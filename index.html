@@ -319,6 +319,7 @@
     /* ===== قائمة من قبلك (الأسماء فقط) ===== */
     [hidden] { display: none !important; }
     .ahead-list { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px 8px; margin-bottom: 8px; }
+    .ticket:not(.show) + .ahead-list { margin-top: 16px; }
     .ahead-list h2 { font-size: 1rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
     .ahead-list ul { list-style: none; max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; }
     .ahead-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 1.05rem; font-weight: 500; overflow-wrap: anywhere; }
@@ -382,9 +383,9 @@
     </div>
 
     <section class="ahead-list" id="aheadList" aria-labelledby="aheadTitle" hidden>
-      <h2 id="aheadTitle">قبلك في الطابور</h2>
+      <h2 id="aheadTitle">قائمة الانتظار</h2>
       <ul id="aheadNames"></ul>
-      <p id="aheadEmpty" hidden>لا أحد قبلك، دورك الآن</p>
+      <p id="aheadEmpty" hidden></p>
     </section>
 
     <button class="btn btn-secondary" id="leaveBtn" style="display:none" onclick="leaveQueue()">
